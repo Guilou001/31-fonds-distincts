@@ -1,0 +1,45 @@
+[project]
+name = "fdg"
+version = "1.0.0"
+description = "Le capital que le BSIF exige contre les garanties de fonds distincts, recalculé depuis le chapitre 7 du TSAV"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Guillaume Vaudescal" }]
+dependencies = [
+    "gvf[figures]>=0.3.0",
+    "matplotlib>=3.9",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    "typer>=0.12",
+]
+
+[project.scripts]
+fdg = "fdg.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/Guilou001/31-fonds-distincts"
+
+[tool.uv.sources]
+gvf = { git = "https://github.com/Guilou001/gv-fintools", tag = "v0.3.0" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fdg"]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

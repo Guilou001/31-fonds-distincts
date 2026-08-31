@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "Le capital des garanties de fonds distincts au Canada : le choc de volatilité du chapitre 7 du TSAV, refait et mesuré"
+message: "Si vous utilisez ce dépôt, citez-le comme suit."
+type: software
+authors:
+  - family-names: Vaudescal
+    given-names: Guillaume
+repository-code: "https://github.com/Guilou001/31-fonds-distincts"
+license: MIT
+version: 1.0.0
+date-released: "2026-08-30"
