@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from fdg import appendices, couverture
-from fdg.garantie import Contrat
+from fdg.garantie import Contrat, passif_reformule
 
 
 def test_l_exemple_travaille_du_regulateur_se_refait():
@@ -25,21 +27,40 @@ def test_la_couverture_est_rejouee_sur_les_vingt_scenarios():
 
 
 def test_seules_les_valeurs_positives_comptent_dans_la_moyenne():
-    """Le capital ne se réduit pas parce que la couverture a rapporté dans certains scénarios."""
-    r = couverture.exigence_avec_couverture(Contrat())
-    moyenne_brute = sum(r["valeurs"]) / 20
-    moyenne_retenue = r["exigence"]
-    assert moyenne_retenue >= moyenne_brute - 1e-12
-    assert moyenne_retenue >= 0
+    """Le capital ne se réduit pas parce que la couverture a rapporté dans certains scénarios.
+
+    La règle s'éprouve sur une entrée qui la déclenche, et non sur le contrat par défaut. Les
+    vingt erreurs de suivi y sont toutes positives. Retirer le plancher ne changerait donc aucun
+    nombre publié, et laisserait un test vert.
+    """
+    assert couverture.moyenne_des_valeurs_positives([1.0, -3.0, 2.0, -4.0]) == pytest.approx(0.75)
+    assert couverture.moyenne_des_valeurs_positives([-1.0, -2.0]) == pytest.approx(0.0)
+    moyenne_ordinaire = (1.0 - 3.0 + 2.0 - 4.0) / 4
+    assert couverture.moyenne_des_valeurs_positives([1.0, -3.0, 2.0, -4.0]) > moyenne_ordinaire
 
 
-def test_un_scenario_plat_ne_laisse_presque_rien_passer():
-    """Sans mouvement de prix, une couverture rééquilibrée n'a rien à rattraper : ce qui reste est
-    la seule érosion due au passage du temps."""
+def test_un_scenario_plat_laisse_passer_exactement_le_passage_du_temps():
+    """Sans mouvement de prix, une couverture en delta n'a rigoureusement rien à rattraper.
+
+    Ce qui reste est le passage du temps sur le passif reformulé, décroissance de la garantie et
+    frais de garantie encaissés confondus. Le seuil est donc cette dérive elle-même, et non une
+    borne lâche : à moins de 1,0, le test tolérait 83 % de l'exigence publiée du § 5.4 et un défaut
+    qui aurait doublé la part des frais serait resté invisible.
+    """
     c = Contrat()
-    plat = [100.0] * 53
-    r = couverture.rejouer_un_scenario(c, plat, c.taux)
-    assert abs(r["valeur_actuelle"]) < 1.0
+    r = couverture.rejouer_un_scenario(c, [100.0] * 53, c.taux)
+    attendu = passif_reformule(replace(c, annees=9.0)) - passif_reformule(c)
+    assert r["valeur_actuelle"] == pytest.approx(attendu, rel=0.05)
+    assert r["valeur_actuelle"] == pytest.approx(couverture.derive_du_chemin_plat(c))
+
+
+def test_la_derive_du_chemin_plat_est_publiee_et_pese_plus_de_la_moitie():
+    """Le nombre de tête du § 5.4 contient cette dérive, et le README le dit. Le test le tient :
+    si l'exigence cessait de la contenir, le README devrait changer avec le code."""
+    c = Contrat()
+    r = couverture.credit_de_couverture(c)
+    assert r["derive_du_chemin_plat"] > 0.5 * r["exigence_avec_couverture"]
+    assert r["derive_du_chemin_plat"] < r["exigence_avec_couverture"]
 
 
 def test_la_couverture_reduit_l_exigence_sans_l_annuler():

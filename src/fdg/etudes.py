@@ -43,7 +43,7 @@ def structure_de_la_grille() -> pd.DataFrame:
 
     Pour chaque échéance, on applique le choc à chacun des soixante-quinze niveaux de volatilité de
     départ et on regarde où ils arrivent. Une étendue nulle signifie que le régulateur impose un
-    niveau, le même pour tous. Une pente de un signifierait qu'il laisse chacun où il est.
+    niveau, le même pour tous. Une corde de un signifierait qu'il laisse chacun où il est.
     """
     lignes = []
     for base in ("terme", "comptant"):
@@ -61,20 +61,48 @@ def pivots() -> pd.DataFrame:
     return pd.DataFrame(lignes)
 
 
-def decomposition_par_contrat(contrats: dict[str, Contrat]) -> pd.DataFrame:
-    """L'exigence de risque de marché et ce que chaque choc y apporte, contrat par contrat."""
+def decomposition_par_contrat(contrats: dict[str, Contrat],
+                              bases: tuple[str, ...] = ("terme", "comptant")) -> pd.DataFrame:
+    """L'exigence de risque de marché et ce que chaque choc y apporte, contrat par contrat.
+
+    Le calcul est refait sous les deux grilles publiées, l'appendice 7-A à terme et l'appendice 7-B
+    au comptant. Le choix n'est pas neutre : il décide lequel des deux chocs pèse le plus lourd. Et
+    la ligne directrice ne dit pas lequel employer pour un passif évalué à volatilité plate.
+    """
     lignes = []
-    for nom, c in contrats.items():
-        d = capital.decomposer(c)
-        lignes.append({
-            "contrat": nom, "fonds": c.fonds, "garantie": c.garantie, "annees": c.annees,
-            "volatilite": c.volatilite,
-            "volatilite_choquee": chocs.volatilite_choquee(100 * c.volatilite, 12 * c.annees) / 100,
-            "passif_reformule": d.passif, "actions_seules": d.actions_seules,
-            "volatilite_seule": d.volatilite_seule, "conjointe": d.conjointe,
-            "somme_des_parts": d.somme_des_parts, "interaction": d.interaction,
-            "part_de_la_volatilite": d.part_de_la_volatilite,
-        })
+    for base in bases:
+        for nom, c in contrats.items():
+            d = capital.decomposer(c, base=base)
+            lignes.append({
+                "base": base,
+                "contrat": nom, "fonds": c.fonds, "garantie": c.garantie, "annees": c.annees,
+                "volatilite": c.volatilite,
+                "volatilite_choquee": chocs.volatilite_choquee(
+                    100 * c.volatilite, 12 * c.annees, base) / 100,
+                "passif_reformule": d.passif, "actions_seules": d.actions_seules,
+                "volatilite_seule": d.volatilite_seule, "conjointe": d.conjointe,
+                "somme_des_parts": d.somme_des_parts, "interaction": d.interaction,
+                "part_de_la_volatilite": d.part_de_la_volatilite,
+            })
+    return pd.DataFrame(lignes)
+
+
+def part_par_echeance(depart: Contrat | None = None) -> pd.DataFrame:
+    """La part de l'exigence que le choc de volatilité explique, échéance par échéance.
+
+    C'est le tableau que la figure du même nom dessine : trois rapports de garantie au fonds, sur
+    quarante-neuf échéances d'un an à vingt-cinq ans, par demi-année.
+    """
+    depart = depart or Contrat()
+    lignes = []
+    for rapport in (0.75, 1.00, 1.25):
+        for k in range(49):
+            annees = 1.0 + 0.5 * k
+            d = capital.decomposer(replace(depart, garantie=depart.fonds * rapport, annees=annees))
+            lignes.append({"rapport_garantie_fonds": rapport, "annees": annees,
+                           "actions_seules": d.actions_seules,
+                           "volatilite_seule": d.volatilite_seule, "conjointe": d.conjointe,
+                           "part_de_la_volatilite": d.part_de_la_volatilite})
     return pd.DataFrame(lignes)
 
 

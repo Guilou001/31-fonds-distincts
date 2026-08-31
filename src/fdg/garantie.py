@@ -1,7 +1,7 @@
 """Ce que vaut une garantie de fonds distincts, et pourquoi c'est une option vendue.
 
 **Le produit, en mots simples.** Un fonds distinct est un fonds commun de placement vendu par un
-assureur, avec une promesse en plus : quelle que soit la valeur du fonds à l'échéance, le détenteur
+assureur, avec une promesse en plus. Quelle que soit la valeur du fonds à l'échéance, le détenteur
 récupère au moins un montant garanti, souvent 75 ou 100 % de ce qu'il a versé. L'assureur prélève
 des frais annuels sur le fonds et, en échange, comble la différence si le fonds a baissé.
 
@@ -75,8 +75,15 @@ def valeur_de_la_garantie(c: Contrat) -> float:
     if c.garantie <= 0:
         # sans promesse, il n'y a rien à payer ; le logarithme ci-dessous n'est pas défini
         return 0.0
-    if c.annees <= 0 or c.volatilite <= 0:
+    if c.annees <= 0:
         return max(c.garantie - c.fonds, 0.0) * c.survie
+    if c.volatilite <= 0:
+        # sans incertitude, le fonds n'a plus qu'une trajectoire : il dérive au taux de swap
+        # diminué des frais. Le paiement est connu d'avance, et il reste à l'actualiser. La
+        # formule ci-dessous n'est pas définie à volatilité nulle, sa limite l'est.
+        a_l_echeance = c.fonds * math.exp((c.taux - c.frais) * c.annees)
+        paiement = max(c.garantie - a_l_echeance, 0.0)
+        return paiement * math.exp(-c.taux * c.annees) * c.survie
     racine = c.volatilite * math.sqrt(c.annees)
     d1 = (math.log(c.fonds / c.garantie)
           + (c.taux - c.frais + 0.5 * c.volatilite ** 2) * c.annees) / racine

@@ -13,7 +13,7 @@ case. Il faut donc interpoler deux fois : d'abord entre les lignes 18 et 19, pui
 exemples travaillés que ce module reproduit tous.
 
 **Ce que la grille cache.** À un mois, le choc amène la volatilité à **41 %** quelle que soit la
-volatilité de départ : un assureur à 5 % reçoit +36, un assureur à 54 % reçoit −13, et les deux
+volatilité de départ. Un assureur à 5 % reçoit +36, un assureur à 54 % reçoit −13, et les deux
 finissent au même endroit. À 360 et 1200 mois, la cible est **25 %**, également pour tous. Entre les
 deux, la cible dépend de la volatilité de départ. Autrement dit, aux deux bouts de la courbe le
 régulateur impose un niveau, et au milieu il impose un déplacement. La ligne directrice ne l'écrit
@@ -72,18 +72,26 @@ def cible_par_echeance(base: str = "terme") -> list[dict]:
 
     Rend pour chaque colonne la volatilité choquée la plus basse et la plus haute obtenues en
     parcourant les 75 niveaux de départ. Quand les deux coïncident, la colonne impose un niveau ;
-    quand elles s'écartent, elle impose un déplacement.
+    quand elles s'écartent, elle impose un déplacement. La colonne `corde` rapporte l'écart entre
+    les deux bouts de la colonne à l'écart des volatilités de départ. Elle ne voit rien de ce qui
+    se passe entre les deux. La colonne `volatilite_de_la_cible_minimale` dit où la cible la plus
+    basse est atteinte : à un bout de la grille, ou à l'intérieur.
     """
     grille = appendices.table_des_chocs(base)
     vols, mm = appendices.volatilites(), appendices.mois()
     sortie = []
     for j, m in enumerate(mm):
         cibles = [vols[i] + grille[i][j] for i in range(len(vols))]
-        sortie.append({"mois": m, "cible_minimale": min(cibles), "cible_maximale": max(cibles),
-                       "etendue": max(cibles) - min(cibles),
-                       # la pente de la cible contre la volatilité de départ : zéro quand le
-                       # régulateur impose un niveau, un quand il laisse l'assureur où il est
-                       "pente": (cibles[-1] - cibles[0]) / (vols[-1] - vols[0])})
+        cible_minimale, cible_maximale = min(cibles), max(cibles)
+        sortie.append({"mois": m, "cible_minimale": cible_minimale,
+                       "cible_maximale": cible_maximale,
+                       "etendue": cible_maximale - cible_minimale,
+                       # la CORDE entre les deux bouts de la colonne, et non une pente ajustée sur
+                       # les 75 points : elle ne voit rien de ce qui se passe entre les deux, et
+                       # une colonne qui descendrait puis remonterait au même niveau afficherait
+                       # zéro. L'étendue, elle, le voit ; les deux se lisent ensemble.
+                       "corde": (cibles[-1] - cibles[0]) / (vols[-1] - vols[0]),
+                       "volatilite_de_la_cible_minimale": vols[cibles.index(cible_minimale)]})
     return sortie
 
 

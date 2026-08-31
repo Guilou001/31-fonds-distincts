@@ -20,9 +20,12 @@ def test_le_choc_d_actions_ne_touche_que_le_fonds():
     assert d.volatilite == pytest.approx(c.volatilite)
 
 
-def test_le_facteur_d_actions_est_celui_de_la_section_cinq_deux():
-    facteur = FACTEUR_ACTIONS
-    assert facteur == pytest.approx(0.35)
+def test_le_facteur_d_actions_de_la_section_cinq_deux_retire_bien_un_tiers_du_fonds():
+    """Un test qui comparerait FACTEUR_ACTIONS à son propre littéral ne vérifierait rien : changer
+    les deux ensemble le laisserait vert. Celui-ci vérifie l'effet, sur un fonds de cent."""
+    d = contrat_choque(Contrat(fonds=100.0), actions=True, volatilite=False)
+    assert d.fonds == pytest.approx(65.0)
+    assert d.fonds == pytest.approx(100.0 * (1 - 0.35))
 
 
 def test_la_conversion_entre_points_et_fraction_se_fait_une_seule_fois():

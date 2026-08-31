@@ -1,4 +1,8 @@
-"""Les quatre figures du dépôt. Chacune reçoit un tableau déjà calculé et n'invente aucun nombre."""
+"""Les cinq figures du dépôt.
+
+Quatre reçoivent le tableau qu'elles dessinent, la cinquième relit la grille des appendices.
+Aucune n'invente un nombre.
+"""
 
 from __future__ import annotations
 
@@ -114,31 +118,23 @@ def credit(table, dossier: Path = DOSSIER) -> list[Path]:
         for k, v in enumerate(sous["part_reduite"]):
             ax.text(x[k] + (i - 0.5) * largeur, v, fr(100 * v, 1) + " %", ha="center",
                     va="bottom", fontsize=8, color=GRIS)
-    ax.set_xticks(x, [f"bande de {fr(100 * t, 0)} %" if t else "aucune bande" for t in tolerances])
-    ax.set_ylabel("part de l'exigence que\nla couverture fait tomber")
+    ax.set_xticks(x, ["aucune bande" if not t else
+                      f"bande de {fr(100 * t, 0)} point" + ("s" if 100 * t >= 2 else "")
+                      for t in tolerances])
+    ax.set_ylabel("part de l'exigence d'actions que\nla couverture fait tomber")
     ax.set_ylim(0, 1.0)
     ax.yaxis.set_major_formatter(formateur(decimales=0, suffixe=" %", facteur=100))
     ax.legend(fontsize=8, ncols=2, frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.01))
     return _fin(fig, "credit_de_couverture", dossier)
 
 
-def part_de_la_volatilite(dossier: Path = DOSSIER) -> list[Path]:
+def part_de_la_volatilite(table, dossier: Path = DOSSIER) -> list[Path]:
     """La part de l'exigence que le choc de volatilité explique, selon l'échéance."""
-    from dataclasses import replace
-
-    from .capital import decomposer
-    from .garantie import Contrat
-
     appliquer()
-    base = Contrat()
-    annees = np.arange(1.0, 25.5, 0.5)
     fig, ax = plt.subplots(figsize=(8.6, 4.6))
     for i, rapport in enumerate((0.75, 1.00, 1.25)):
-        parts = []
-        for a in annees:
-            d = decomposer(replace(base, garantie=base.fonds * rapport, annees=float(a)))
-            parts.append(d.part_de_la_volatilite)
-        ax.plot(annees, parts, lw=1.9, color=OKABE_ITO[i],
+        sous = table[table["rapport_garantie_fonds"] == rapport].sort_values("annees")
+        ax.plot(sous["annees"], sous["part_de_la_volatilite"], lw=1.9, color=OKABE_ITO[i],
                 label=f"garantie à {fr(100 * rapport, 0)} %")
     ax.axhline(0.5, color=GRIS, lw=1.0, ls="--")
     ax.text(1.2, 0.505, "la moitié de l'exigence", fontsize=8, color=GRIS, va="bottom")

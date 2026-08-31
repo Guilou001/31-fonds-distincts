@@ -45,13 +45,28 @@ def test_une_garantie_vaut_plus_cher_quand_le_fonds_baisse():
     assert valeurs == sorted(valeurs)
 
 
-def test_a_volatilite_nulle_la_garantie_vaut_sa_valeur_intrinseque_actualisee():
+@pytest.mark.parametrize("volatilite", [0.0, 1e-9])
+def test_a_volatilite_nulle_la_garantie_vaut_sa_valeur_intrinseque_actualisee(volatilite):
     """Sans incertitude, le fonds croît au taux de swap diminué des frais, et le paiement est
-    connu d'avance."""
-    c = Contrat(volatilite=1e-9, deces=0.0, decheance=0.0)
+    connu d'avance.
+
+    Les deux valeurs de volatilité comptent, et la première est celle qui manquait. À 1e-9 le code
+    passe par la formule de Black et Scholes. À zéro exactement il prend une branche à part, celle
+    qui rendait la valeur intrinsèque brute, sans dérive ni actualisation. C'était 93 % de trop sur
+    une garantie à 140.
+    """
+    c = Contrat(volatilite=volatilite, garantie=140.0, deces=0.0, decheance=0.0)
     attendu = max(c.garantie - c.fonds * math.exp((c.taux - c.frais) * c.annees), 0.0)
     attendu *= math.exp(-c.taux * c.annees)
     assert valeur_de_la_garantie(c) == pytest.approx(attendu, abs=1e-6)
+
+
+def test_les_deux_branches_a_volatilite_nulle_se_rejoignent():
+    """La branche à volatilité nulle est la limite de la formule fermée, et elle doit se recoller à
+    elle : sinon le code a deux définitions du même contrat."""
+    exacte = Contrat(volatilite=0.0, garantie=140.0)
+    presque = replace(exacte, volatilite=1e-9)
+    assert valeur_de_la_garantie(exacte) == pytest.approx(valeur_de_la_garantie(presque), abs=1e-6)
 
 
 def test_la_survie_diminue_la_garantie_proportionnellement():

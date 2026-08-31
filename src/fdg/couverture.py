@@ -30,9 +30,11 @@ def rejouer_un_scenario(c: Contrat, prix: list[float], taux: float,
                         tolerance: float = 0.0) -> dict:
     """La couverture rejouée pas à pas sur une trajectoire, et l'erreur de suivi qu'elle laisse.
 
-    `tolerance` est la bande de non-intervention : on ne rééquilibre que si la sensibilité a bougé
-    de plus que cette fraction. À zéro, on rééquilibre à chaque pas, ce qui est le cas le plus
-    favorable à l'assureur et donc le plancher de l'exigence.
+    `tolerance` est la bande de non-intervention, mesurée en points de sensibilité et non en
+    proportion : on ne rééquilibre que si la sensibilité a bougé de plus que cet écart absolu. Une
+    tolérance de 0,05 laisse donc la sensibilité s'écarter de cinq points de part et d'autre de
+    celle qui est détenue, soit une fenêtre de dix points. À zéro, on rééquilibre à chaque pas, ce
+    qui est le cas le plus favorable à l'assureur et donc le plancher de l'exigence.
     """
     pas = len(prix) - 1
     duree = 1.0 / pas                       # les scénarios couvrent un an
@@ -62,6 +64,35 @@ def rejouer_un_scenario(c: Contrat, prix: list[float], taux: float,
             "ecart_maximal": float(max(ecarts, key=abs)) if ecarts else 0.0}
 
 
+def moyenne_des_valeurs_positives(valeurs: list[float]) -> float:
+    """La règle d'agrégation du régulateur : les scénarios gagnants comptent pour zéro.
+
+    C'est ce qui distingue l'exigence d'une moyenne ordinaire. Un scénario où la couverture a
+    rapporté ne réduit pas le capital, et il ne le réduit pas non plus « un peu ». Il est écrasé à
+    zéro avant la moyenne, et le diviseur reste le nombre total de scénarios.
+    """
+    return sum(max(v, 0.0) for v in valeurs) / len(valeurs)
+
+
+def derive_du_chemin_plat(c: Contrat, pas: str = "hebdomadaire",
+                          tolerance: float = 0.0) -> float:
+    """Ce que la mesure compte quand le prix d'actions ne bouge pas d'un cent.
+
+    Sur une trajectoire strictement plate, une couverture en delta n'a rigoureusement rien à
+    rattraper : l'actif de couverture ne bouge pas. Ce qui reste est le passage du temps sur le
+    passif reformulé. Deux morceaux le composent, la décroissance temporelle de la garantie et les
+    frais de garantie qui sortent du passif parce que l'assureur les a encaissés dans l'année.
+
+    Cet encaissement, `rejouer_un_scenario` ne le crédite nulle part au compte de couverture. La
+    dérive est donc un plancher déterministe de l'erreur de suivi, présent dans les vingt
+    scénarios. Le § 5.4 du README la publie à côté de l'exigence, pour que le lecteur sache ce que
+    le nombre contient.
+    """
+    depart = appendices.scenarios(pas)[0][0]
+    n = len(appendices.scenarios(pas))
+    return rejouer_un_scenario(c, [depart] * n, c.taux, tolerance)["valeur_actuelle"]
+
+
 def exigence_avec_couverture(c: Contrat, pas: str = "hebdomadaire",
                              tolerance: float = 0.0) -> dict:
     """L'exigence de risque d'actions d'un assureur qui se couvre, sur les vingt scénarios publiés.
@@ -77,9 +108,8 @@ def exigence_avec_couverture(c: Contrat, pas: str = "hebdomadaire",
         prix = [ligne[j] for ligne in table]
         resultats.append(rejouer_un_scenario(c, prix, c.taux, tolerance))
     valeurs = [r["valeur_actuelle"] for r in resultats]
-    positives = [max(v, 0.0) for v in valeurs]
     return {"scenarios": n, "pas": pas,
-            "exigence": float(sum(positives) / n),
+            "exigence": float(moyenne_des_valeurs_positives(valeurs)),
             "valeurs": valeurs,
             "scenarios_perdants": int(sum(1 for v in valeurs if v > 0)),
             "pire_scenario": float(max(valeurs)), "meilleur_scenario": float(min(valeurs))}
@@ -91,8 +121,10 @@ def credit_de_couverture(c: Contrat, pas: str = "hebdomadaire",
 
     La ligne directrice compare l'exigence obtenue en rejouant la couverture sur les vingt scénarios
     au seul volet « baisse de prix » de la section 7.2.2, c'est-à-dire à l'exigence d'un assureur
-    qui ne se couvre pas. La réduction est la différence, et elle ne peut pas être négative : une
-    couverture qui ferait pire que rien ne donne aucun crédit, elle n'ajoute pas de capital.
+    qui ne se couvre pas. Le dénominateur est donc le choc d'actions pris seul, et non l'exigence
+    conjointe du § 5.3 : une part de 84,8 % se lit « de l'exigence de risque d'actions ». La
+    réduction est la différence, et elle ne peut pas être négative : une couverture qui ferait pire
+    que rien ne donne aucun crédit, elle n'ajoute pas de capital.
     """
     from .capital import decomposer
 
@@ -102,6 +134,7 @@ def credit_de_couverture(c: Contrat, pas: str = "hebdomadaire",
     return {"exigence_sans_couverture": sans, "exigence_avec_couverture": avec["exigence"],
             "credit": reduction,
             "part_reduite": reduction / sans if sans > 0 else float("nan"),
+            "derive_du_chemin_plat": derive_du_chemin_plat(c, pas, tolerance),
             "scenarios_perdants": avec["scenarios_perdants"],
             "pire_scenario": avec["pire_scenario"], "pas": pas, "tolerance": tolerance}
 

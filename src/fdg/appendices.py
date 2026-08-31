@@ -11,12 +11,13 @@ HTML, dans des tableaux dont la mise en forme change d'une version à l'autre de
 Un chargeur qui les extrairait à chaque exécution casserait au premier changement de gabarit, et
 sans le dire. Le fichier `tables/appendices_licat_7.json` porte donc les 3 270 nombres relevés le
 30 août 2026, avec la référence de leur source, et le dépôt les traite comme une donnée de
-référence : ce qui change avec la ligne directrice se change à la main, une fois, en connaissance de
+référence. Ce qui change avec la ligne directrice se change à la main, une fois, en connaissance de
 cause.
 
-**Comment on sait qu'ils sont bien lus.** La ligne directrice publie deux exemples travaillés
-d'interpolation, et les tables mensuelle et hebdomadaire de l'appendice 7-C finissent au même point.
-`tests/test_appendices.py` vérifie les trois.
+**Comment on sait qu'ils sont bien lus.** Deux vérifications, dans `tests/test_appendices.py`. Les
+vingt cellules que la ligne directrice cite nommément dans ses exemples se retrouvent dans la table
+recopiée. Et les tables mensuelle et hebdomadaire de l'appendice 7-C finissent au même point. Les
+neuf exemples travaillés eux-mêmes sont vérifiés ailleurs, dans `tests/test_chocs.py`.
 """
 
 from __future__ import annotations

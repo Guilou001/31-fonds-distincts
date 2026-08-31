@@ -43,6 +43,9 @@ def structure() -> None:
     table = etudes.structure_de_la_grille()
     typer.echo(table[table["base"] == "terme"].to_string(index=False))
     _ecrire(table, "structure_de_la_grille")
+    pivots = etudes.pivots()
+    typer.echo(pivots[pivots["base"] == "terme"].to_string(index=False))
+    _ecrire(pivots, "pivots")
     figures.grille_des_chocs()
 
 
@@ -50,17 +53,19 @@ def structure() -> None:
 def exigence() -> None:
     """L'exigence de risque de marché, et ce que chaque choc y apporte."""
     table = etudes.decomposition_par_contrat(etudes.contrats_types())
-    typer.echo(table[["contrat", "actions_seules", "volatilite_seule", "conjointe",
+    typer.echo(table[["base", "contrat", "actions_seules", "volatilite_seule", "conjointe",
                       "interaction", "part_de_la_volatilite"]].to_string(index=False))
     _ecrire(table, "decomposition")
+    part = etudes.part_par_echeance()
+    _ecrire(part, "part_par_echeance")
     controle = etudes.controle_de_la_formule(Contrat())
     typer.echo("\n  contrôle de la formule fermée par simulation : "
                f"{controle['ecarts_types']:.2f} erreur type")
     Path("results").mkdir(exist_ok=True)
     Path("results/controle.json").write_text(
         json.dumps({k: float(v) for k, v in controle.items()}, indent=2), encoding="utf-8")
-    figures.decomposition(table)
-    figures.part_de_la_volatilite()
+    figures.decomposition(table[table["base"] == "terme"])
+    figures.part_de_la_volatilite(part)
 
 
 @app.command()
@@ -69,7 +74,8 @@ def couverture() -> None:
     c = Contrat()
     table = etudes.credit_par_frequence(c)
     typer.echo(table[["pas", "tolerance", "exigence_sans_couverture",
-                      "exigence_avec_couverture", "credit", "part_reduite"]].to_string(index=False))
+                      "exigence_avec_couverture", "credit", "part_reduite",
+                      "derive_du_chemin_plat"]].to_string(index=False))
     _ecrire(table, "credit_de_couverture")
     detail = etudes.scenarios_de_couverture(c)
     _ecrire(detail, "scenarios_de_couverture")
