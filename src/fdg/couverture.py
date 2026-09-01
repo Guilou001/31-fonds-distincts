@@ -80,13 +80,16 @@ def derive_du_chemin_plat(c: Contrat, pas: str = "hebdomadaire",
 
     Sur une trajectoire strictement plate, une couverture en delta n'a rigoureusement rien à
     rattraper : l'actif de couverture ne bouge pas. Ce qui reste est le passage du temps sur le
-    passif reformulé. Deux morceaux le composent, la décroissance temporelle de la garantie et les
-    frais de garantie qui sortent du passif parce que l'assureur les a encaissés dans l'année.
+    passif reformulé. Deux morceaux le composent, mesurés à 0,391 et 0,251 sur le contrat par
+    défaut : la valeur de la garantie, qui **monte** parce que le facteur de survie croît quand
+    l'échéance se rapproche, et les frais de garantie qui sortent du passif parce que l'assureur les
+    a encaissés dans l'année.
 
     Cet encaissement, `rejouer_un_scenario` ne le crédite nulle part au compte de couverture. La
-    dérive est donc un plancher déterministe de l'erreur de suivi, présent dans les vingt
-    scénarios. Le § 5.4 du README la publie à côté de l'exigence, pour que le lecteur sache ce que
-    le nombre contient.
+    dérive est donc une composante déterministe de l'erreur de suivi, présente dans les vingt
+    scénarios, sans en être un plancher : le dix-huitième laisse passer 0,60 contre 0,64. Le § 5.4
+    du README la publie à côté de l'exigence, pour que le lecteur sache ce que le nombre
+    contient.
     """
     depart = appendices.scenarios(pas)[0][0]
     n = len(appendices.scenarios(pas))
@@ -159,7 +162,7 @@ def refaire_l_exemple() -> dict:
 
     La variation d'une période est la position après rééquilibrage, moins la position d'ouverture,
     plus le flux encaissé ou payé. La perte de couverture est la différence entre les deux
-    variations, et elle est ensuite actualisée d'un pas au taux de swap.
+    variations. Elle n'est pas actualisée ici, l'exemple du régulateur portant sur un seul pas.
     """
     e = EXEMPLE_DU_REGULATEUR
     variation_passif = (e["apres_reequilibrage"]["passif"] - e["ouverture"]["passif"]

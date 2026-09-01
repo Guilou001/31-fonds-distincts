@@ -88,7 +88,7 @@ Aucun téléchargement récurrent : tout vient de la ligne directrice elle-même
     [75 × 13 valeurs],
     [Appendice 7-C],
     [vingt trajectoires de prix d'actions sur un an],
-    [53 semaines et 13 mois],
+    [53 points hebdomadaires et 13 mensuels],
     [Section 7.2.2],
     [neuf exemples travaillés d'interpolation],
     [9 lignes],
@@ -230,7 +230,7 @@ La conséquence pratique se lit sur le pivot, le niveau de volatilité au-delà 
 
 #figure(image("../results/figures/grille_des_chocs.png", width: 100%), caption: [Où arrive une volatilité de départ, selon l'échéance])
 
-Comment lire cette figure : l'abscisse est la volatilité de départ, l'ordonnée celle qui sort du choc, et la diagonale marque l'absence de choc. Une courbe horizontale signifie que le régulateur impose un niveau. Quatre des cinq courbes coupent la diagonale entre 41,0 et 44,8 %, et celle de 360 mois la coupe à 25,0 %. À gauche du croisement le choc monte, à droite il descend.
+Comment lire cette figure : l'abscisse est la volatilité de départ, l'ordonnée celle qui sort du choc, et la diagonale marque l'absence de choc. Les cinq courbes tracées portent les échéances de 1, 12, 60, 120 et 360 mois, qui ne sont pas les cinq du tableau ci-dessus. Une courbe horizontale signifie que le régulateur impose un niveau. Quatre des cinq courbes coupent la diagonale entre 41,0 et 44,8 %, et celle de 360 mois la coupe à 25,0 %. À gauche du croisement le choc monte, à droite il descend.
 
 === 5.3 Le choc de volatilité dépasse le choc d'actions de dix à quatorze ans, à cent pour cent de garantie
 
@@ -400,7 +400,7 @@ La bande de non-intervention se mesure en points de sensibilité, et non en prop
 
 Comment lire ce tableau, en trois constats. Le premier est que le dénominateur est le choc d'actions pris seul, 7,90, et non l'exigence conjointe de 13,85 du § 5.3. Rapporté à cette dernière, le crédit de 6,69 ne vaut plus que 48,3 %. Le deuxième est que la couverture ne fait jamais tomber l'exigence à zéro : le rééquilibrage discret laisse toujours passer quelque chose, et c'est ce que le test du régulateur mesure. Le troisième est que plus de la moitié de ce qui reste ne vient d'aucun mouvement de prix. Une trajectoire strictement plate, où une couverture en delta n'a rien à rattraper, produit déjà *0,64*, soit 53,4 % de l'exigence hebdomadaire. Ce que le tableau n'établit pas : la fréquence et la bande y sont des choix de l'analyste, pas des exigences du régulateur, et un assureur qui rééquilibrerait à un autre pas obtiendrait d'autres nombres.
 
-Cette dérive est le passage du temps sur le passif reformulé, décroissance de la garantie et frais de garantie encaissés confondus. Le compte de couverture ne crédite pas cet encaissement, alors que le passif, lui, le libère. La mesure est donc un majorant, et le tableau publie son plancher. La fréquence compte moins que la discipline : passer de l'hebdomadaire au mensuel coûte 2,4 points de crédit, alors que laisser filer une bande de cinq points en coûte 8,4.
+Cette dérive est le passage du temps sur le passif reformulé, et elle se partage en deux morceaux mesurés. La valeur de la garantie monte de *0,39*, soit 60,9 % du total, parce que le facteur de survie croît à mesure que l'échéance se rapproche. Les frais de garantie encaissés apportent les *0,25* restants, soit 39,1 % : le passif les libère, et le compte de couverture ne les crédite nulle part. La mesure est donc un majorant, et le tableau publie son plancher. La fréquence compte moins que la discipline : passer de l'hebdomadaire au mensuel coûte 2,4 points de crédit, alors que laisser filer une bande de cinq points en coûte 8,4.
 
 *Les vingt scénarios sont perdants, sans exception*, et un seul, le dix-huitième, laisse passer moins que la dérive du chemin plat, 0,60 contre 0,64. Le vendeur d'options qui se couvre en delta perd donc d'abord sur l'immobilité, par construction comptable, et ensuite sur les grands mouvements, quel qu'en soit le sens.
 
@@ -438,7 +438,7 @@ Aucun téléchargement n'est nécessaire : les trois appendices sont dans le paq
     [Le résultat de tête suppose l'appendice 7-A],
     [déclaré ; sous l'appendice 7-B la part de la volatilité tombe de 57,6 % à 44,2 % sur la garantie de dix ans à cent pour cent, et le classement s'y inverse, et la ligne directrice ne dit pas lequel des deux s'applique à un passif évalué à volatilité plate],
     [L'erreur de suivi contient une dérive déterministe],
-    [mesuré ; un chemin de prix strictement plat produit déjà 0,64 des 1,20 publiés, parce que les frais de garantie encaissés sortent du passif sans être crédités au compte de couverture, si bien que le crédit de 84,8 % est un minorant],
+    [mesuré ; un chemin de prix strictement plat produit déjà 0,64 des 1,20 publiés, dont 0,25 vient des frais de garantie encaissés que le compte de couverture ne crédite pas, et 0,39 de la valeur de la garantie qui monte à mesure que l'échéance approche, si bien que le crédit de 84,8 % est un minorant],
     [Le passif reformulé est évalué en Black et Scholes à volatilité constante],
     [déclaré ; la grille du régulateur est une surface, et une vraie évaluation emploierait un modèle à volatilité stochastique],
     [L'assiette d'actions est supposée entièrement en actions cotées de marchés développés],

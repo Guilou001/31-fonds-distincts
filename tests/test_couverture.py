@@ -42,8 +42,8 @@ def test_seules_les_valeurs_positives_comptent_dans_la_moyenne():
 def test_un_scenario_plat_laisse_passer_exactement_le_passage_du_temps():
     """Sans mouvement de prix, une couverture en delta n'a rigoureusement rien à rattraper.
 
-    Ce qui reste est le passage du temps sur le passif reformulé, décroissance de la garantie et
-    frais de garantie encaissés confondus. Le seuil est donc cette dérive elle-même, et non une
+    Ce qui reste est le passage du temps sur le passif reformulé, hausse de la valeur de la
+    garantie et frais de garantie encaissés confondus. Le seuil est donc cette dérive elle-même, et non une
     borne lâche : à moins de 1,0, le test tolérait 83 % de l'exigence publiée du § 5.4 et un défaut
     qui aurait doublé la part des frais serait resté invisible.
     """
