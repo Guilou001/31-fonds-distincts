@@ -1,4 +1,4 @@
-#set document(title: "Le choc de volatilité pèse plus lourd que le choc d'actions, et personne ne l'a écrit", author: "Guillaume Vaudescal")
+#set document(title: "Quel choc explique le capital des garanties de fonds distincts ?", author: "Guillaume Vaudescal")
 #set page(
   paper: "a4",
   margin: (x: 2.2cm, y: 2.4cm),
@@ -30,22 +30,30 @@
 
 #align(center)[
   #block(width: 100%)[
-    #text(size: 18pt, weight: "bold")[Le choc de volatilité pèse plus lourd que le choc d'actions, et personne ne l'a écrit]
+    #text(size: 18pt, weight: "bold")[Quel choc explique le capital des garanties de fonds distincts ?]
     #v(0.6em)
-    #text(size: 10pt, fill: luma(70))[Guillaume Vaudescal · 2026-08-31 · #link("https://github.com/Guilou001/31-fonds-distincts")[Guilou001/31-fonds-distincts]]
+    #text(size: 10pt, fill: luma(70))[Guillaume Vaudescal · 2026-09-04 · #link("https://github.com/Guilou001/31-fonds-distincts")[Guilou001/31-fonds-distincts]]
   ]
 ]
 #v(1.2em)
 #line(length: 100%, stroke: 0.6pt + luma(190))
 #v(0.8em)
 
-Depuis 2025, le BSIF exige des assureurs vie qu'ils calculent le capital de leurs garanties de fonds distincts en faisant baisser les actions et monter la volatilité en même temps. La partie volatilité est la nouveauté, et elle est publiée sous forme d'une grille de mille nombres sans un mot sur ce qu'elle fait. Ce dépôt la refait, mesure ce qu'elle coûte, et trouve une erreur dans les exemples du régulateur.
+Un fonds distinct ressemble à un fonds commun de placement auquel un assureur ajoute une garantie. Si la valeur du placement termine sous le montant promis, l'assureur paie la différence. Le coût de cette promesse augmente lorsque le marché baisse, mais également lorsque l'incertitude sur ses mouvements futurs augmente.
 
-*Résultat en une phrase.* Sur une garantie de dix ans à cent pour cent, le choc de volatilité exige à lui seul *7,97 dollars* de capital par cent dollars de fonds. Le choc d'actions en exige *7,90*, si bien que la volatilité fait *57,6 %* de l'exigence conjointe. Les neuf exemples travaillés de la ligne directrice se reproduisent tous, sauf une addition : elle imprime *51,4* là où 54,0 moins 3,6 fait *50,4*. Ce classement vaut sous l'appendice 7-A, la grille à terme, et s'inverse sous l'appendice 7-B, la grille au comptant, que le § 5.3 mesure aussi.
+Depuis 2025, le BSIF demande aux assureurs de combiner un choc sur le niveau des actions et un choc sur leur volatilité. Le présent projet reconstruit les grilles publiées, reproduit les neuf exemples du régulateur et sépare la contribution des deux chocs.
+
+*Résultat principal.* Pour une garantie de dix ans égale à 100 % du dépôt, le choc de volatilité exige 7,97 dollars de capital par tranche de 100 dollars, contre 7,90 dollars pour le choc d'actions. La volatilité représente ainsi 57,6 % de l'exigence conjointe dans cette configuration. Les neuf chocs des exemples officiels sont retrouvés, mais un total imprimé vaut 51,4 alors que 54,0 moins 3,6 donne 50,4. Cette hiérarchie dépend toutefois de la grille utilisée et s'inverse dans l'appendice fondé sur les valeurs au comptant.
+
+Afin d'expliquer ces résultats, nous présenterons d'abord la garantie et la manière dont sa valeur réagit au marché. Dans un deuxième temps, nous reconstruirons les grilles des appendices 7-A et 7-B, puis les exemples du BSIF. Ensuite, nous séparerons les chocs et étudierons leur interaction selon l'échéance. Enfin, nous analyserons la couverture dynamique, les vingt scénarios prescrits, les limites et la reproduction.
+
+Le rapport détaillé est disponible en PDF : #link("rapport/rapport.pdf")[rapport/rapport.pdf].
+
+== Résumé en anglais
 
 _Summary in English. OSFI's 2025 segregated fund guarantee regime requires insurers to shock equity levels and implied volatilities simultaneously. This repository rebuilds the volatility shock grid of Appendix 7-A (75 × 13 published values), reproduces all nine of the guideline's worked interpolation examples and finds that one of the nine printed totals does not add up (51.4 where 54.0 − 3.6 = 50.4). It then measures what nobody publishes: across the sample contracts the volatility shock alone accounts for 22.7 % to 57.6 % of the joint market risk requirement, a share that moves with both term and moneyness; on a continuous grid of terms it peaks at 64.4 % around twelve years. The two shocks interfere rather than add. That ranking of the two shocks is specific to Appendix 7-A: under Appendix 7-B, the spot-based grid, the volatility share of the ten-year contract falls to 44.2 % and equity leads again. The grid turns out to pin one-month volatility at 41 % whatever the insurer's starting level, and Appendix 7-A also pins thirty-year volatility at 25 %, so an insurer above roughly 45 % sees its volatility reduced by the stress. Replaying a delta hedge over the twenty prescribed scenarios of Appendix 7-C removes 84.8 % of the equity risk requirement, and all twenty scenarios lose money. Over half of what is left is a deterministic drift that a flat price path already produces, and the repository publishes that floor beside the headline._
 
-== 1. La question posée
+== 1. La question en détail
 
 *Le produit, en mots simples.* Un fonds distinct est un fonds commun de placement vendu par un assureur, avec une promesse en plus. Quelle que soit la valeur du fonds à l'échéance, le détenteur récupère au moins un montant garanti. L'assureur prélève des frais annuels et, en échange, comble la différence si le fonds a baissé.
 
